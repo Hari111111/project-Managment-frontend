@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function AvatarUpload({ value, onChange, onFileChange, label = "Profile Picture" }) {
   const [previewUrl, setPreviewUrl] = useState(value);
@@ -6,6 +6,20 @@ function AvatarUpload({ value, onChange, onFileChange, label = "Profile Picture"
   const [error, setError] = useState("");
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+  useEffect(() => {
+    setPreviewUrl(value);
+  }, [value]);
+
+  const getImageUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("data:") || url.startsWith("blob:")) {
+      return url;
+    }
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+    const backendBase = apiBase.replace("/api", "");
+    return `${backendBase}${url}`;
+  };
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
@@ -100,7 +114,7 @@ function AvatarUpload({ value, onChange, onFileChange, label = "Profile Picture"
           <img
             alt="Profile preview"
             className="h-24 w-24 rounded-full border-2 border-slate-200 object-cover dark:border-slate-700"
-            src={previewUrl}
+            src={getImageUrl(previewUrl)}
           />
           <p className="text-xs text-slate-500 dark:text-slate-400">Preview</p>
         </div>

@@ -16,6 +16,7 @@ function ProfilePage() {
     mobile: user?.mobile || "",
   });
   const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState(null);
 
   useEffect(() => {
     dispatch(clearUserError());
@@ -23,6 +24,29 @@ function ProfilePage() {
       dispatch(clearUserError());
     };
   }, [dispatch]);
+
+  // Sync form when user profile data updates
+  useEffect(() => {
+    if (user) {
+      setForm({
+        name: user.name || "",
+        avatar: user.avatar || "",
+        mobile: user.mobile || "",
+      });
+      setSelectedFile(null);
+    }
+  }, [user]);
+
+  // Handle local file preview object URL lifetime
+  useEffect(() => {
+    if (selectedFile) {
+      const objectUrl = URL.createObjectURL(selectedFile);
+      setFilePreviewUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    } else {
+      setFilePreviewUrl(null);
+    }
+  }, [selectedFile]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -54,11 +78,11 @@ function ProfilePage() {
       <div className="panel p-6">
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
           <div className="flex flex-col items-center gap-3">
-            {form.avatar && !form.avatar.startsWith("blob:") ? (
+            {filePreviewUrl || form.avatar ? (
               <img
                 alt="Profile"
                 className="h-32 w-32 rounded-full border-4 border-brand-600 object-cover"
-                src={form.avatar.startsWith("http") ? form.avatar : `${import.meta.env.VITE_API_BASE_URL?.replace("/api", "") || "http://localhost:5000"}${form.avatar}`}
+                src={filePreviewUrl || (form.avatar.startsWith("http") ? form.avatar : `${import.meta.env.VITE_API_BASE_URL?.replace("/api", "") || "http://localhost:5000"}${form.avatar}`)}
               />
             ) : (
               <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-brand-600 bg-brand-100 text-5xl font-bold text-brand-700 dark:bg-brand-900/30 dark:text-brand-400">
