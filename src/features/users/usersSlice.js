@@ -62,7 +62,11 @@ const usersSlice = createSlice({
     actionLoading: false,
     error: "",
   },
-  reducers: {},
+  reducers: {
+    clearUserError: (state) => {
+      state.error = "";
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchUsers.pending, (state) => {
@@ -114,4 +118,5 @@ const usersSlice = createSlice({
   },
 });
 
+export const { clearUserError } = usersSlice.actions;
 export default usersSlice.reducer;

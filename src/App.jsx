@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useSocket } from "./hooks/useSocket";
+import { useAppSelector } from "./hooks/useAppHooks";
 
 import AppShell from "./components/layout/AppShell";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -17,6 +18,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 
 function App() {
   useSocket(); // Initialize socket connection
+  const { user } = useAppSelector((state) => state.auth);
 
   return (
     <>
@@ -31,8 +33,24 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
+          <Route
+            index
+            element={
+              user?.role === "Admin" ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Navigate to="/projects" replace />
+              )
+            }
+          />
+          <Route
+            path="dashboard"
+            element={
+              <RoleRoute roles={["Admin"]}>
+                <DashboardPage />
+              </RoleRoute>
+            }
+          />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="projects/:projectId" element={<ProjectDetailsPage />} />
           <Route

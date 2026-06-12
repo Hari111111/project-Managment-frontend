@@ -8,14 +8,21 @@ import { useColorMode } from "../../styles/theme";
 import NotificationBell from "../common/NotificationBell";
 
 const buildNavigation = (role) => {
-  const items = [
-    { label: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/dashboard" },
-    { label: "Projects", icon: <FolderKanban size={20} />, path: "/projects" },
-    { label: "Profile", icon: <User size={20} />, path: "/profile" },
-  ];
+  const items = [];
 
   if (role === "Admin") {
-    items.splice(2, 0, { label: "Users", icon: <Users size={20} />, path: "/users" });
+    items.push({ label: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/dashboard" });
+  }
+
+  items.push({ label: "Projects", icon: <FolderKanban size={20} />, path: "/projects" });
+
+  if (role === "Admin") {
+    items.push({ label: "Users", icon: <Users size={20} />, path: "/users" });
+  }
+
+  items.push({ label: "Profile", icon: <User size={20} />, path: "/profile" });
+
+  if (role === "Admin") {
     items.push({ label: "Activities", icon: <ClipboardList size={20} />, path: "/activities" });
   }
 
@@ -78,7 +85,7 @@ function AppShell() {
   );
 
   return (
-    <div className="min-h-screen bg-transparent transition-colors duration-300">
+    <div className="h-screen overflow-hidden bg-transparent transition-colors duration-300">
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 bg-slate-950/20 backdrop-blur-sm md:hidden animate-fade-in" onClick={() => setMobileOpen(false)}>
           <div
@@ -90,13 +97,13 @@ function AppShell() {
         </div>
       ) : null}
 
-      <div className="mx-auto flex min-h-screen max-w-[1600px]">
-        <aside className="hidden w-72 shrink-0 border-r border-white/20 bg-white/40 backdrop-blur-xl dark:border-white/5 dark:bg-slate-900/40 md:block">
+      <div className="mx-auto flex h-full max-w-[1600px] w-full overflow-hidden">
+        <aside className="hidden w-72 shrink-0 border-r border-white/20 bg-white/40 backdrop-blur-xl dark:border-white/5 dark:bg-slate-900/40 md:block h-full overflow-y-auto">
           {navContent}
         </aside>
 
-        <main className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-30 border-b border-white/20 bg-white/40 backdrop-blur-xl dark:border-white/5 dark:bg-slate-900/40">
+        <main className="flex-1 flex flex-col h-full overflow-hidden">
+          <header className="shrink-0 border-b border-white/20 bg-white/40 backdrop-blur-xl dark:border-white/5 dark:bg-slate-900/40">
             <div className="flex items-center justify-between gap-4 px-6 py-4 md:px-8">
               <div className="flex items-center gap-3">
                 <button className="btn-secondary !p-2.5 md:hidden" onClick={() => setMobileOpen(true)} type="button">
@@ -131,7 +138,7 @@ function AppShell() {
             </div>
           </header>
 
-          <div className="px-6 py-8 md:px-8 flex-1 animate-fade-in">
+          <div className="px-6 py-8 md:px-8 flex-1 overflow-y-auto animate-fade-in">
             <Outlet />
           </div>
         </main>

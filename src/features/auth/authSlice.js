@@ -5,23 +5,33 @@ import api from "../../services/api";
 const storedToken = localStorage.getItem("pms_token");
 const storedUser = localStorage.getItem("pms_user");
 
-export const loginUser = createAsyncThunk("auth/loginUser", async (payload, thunkApi) => {
-  try {
-    const response = await api.post("/auth/login", payload);
-    return response.data;
-  } catch (error) {
-    return thunkApi.rejectWithValue(error.response?.data?.message || "Login failed");
-  }
-});
+export const loginUser = createAsyncThunk(
+  "auth/loginUser",
+  async (payload, thunkApi) => {
+    try {
+      const response = await api.post("/auth/login", payload);
+      return response.data;
+    } catch (error) {
+      return thunkApi.rejectWithValue(
+        error.response?.data?.message || "Login failed",
+      );
+    }
+  },
+);
 
-export const setupAdmin = createAsyncThunk("auth/setupAdmin", async (payload, thunkApi) => {
-  try {
-    const response = await api.post("/auth/setup-admin", payload);
-    return response.data;
-  } catch (error) {
-    return thunkApi.rejectWithValue(error.response?.data?.message || "Setup failed");
-  }
-});
+export const setupAdmin = createAsyncThunk(
+  "auth/setupAdmin",
+  async (payload, thunkApi) => {
+    try {
+      const response = await api.post("/auth/setup-admin", payload);
+      return response.data;
+    } catch (error) {
+      return thunkApi.rejectWithValue(
+        error.response?.data?.message || "Setup failed",
+      );
+    }
+  },
+);
 
 const persistSession = (token, user) => {
   localStorage.setItem("pms_token", token);

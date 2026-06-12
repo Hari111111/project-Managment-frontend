@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
+import toast from "react-hot-toast";
 
 import PageHeader from "../components/common/PageHeader";
 import Loader from "../components/common/Loader";
 import EmptyState from "../components/common/EmptyState";
 import StatusChip from "../components/common/StatusChip";
 import QuickStatusUpdate from "../components/common/QuickStatusUpdate";
+import EditProjectModal from "../components/common/EditProjectModal";
 import { useAppDispatch, useAppSelector } from "../hooks/useAppHooks";
-import { fetchProjects } from "../features/projects/projectsSlice";
+import { fetchProjects, deleteProject } from "../features/projects/projectsSlice";
 
 function ProjectsPage() {
   const dispatch = useAppDispatch();
@@ -17,6 +19,18 @@ function ProjectsPage() {
   const { user } = useAppSelector((state) => state.auth);
   const [filters, setFilters] = useState({ query: "", status: "" });
   const [statusUpdateId, setStatusUpdateId] = useState(null);
+  const [editProject, setEditProject] = useState(null);
+
+  const handleDelete = async (projectId) => {
+    if (window.confirm("Are you sure you want to delete this project?")) {
+      const result = await dispatch(deleteProject(projectId));
+      if (!result.error) {
+        toast.success("Project deleted successfully");
+      } else {
+        toast.error(result.payload || "Failed to delete project");
+      }
+    }
+  };
 
   useEffect(() => {
     dispatch(fetchProjects());
@@ -105,9 +119,11 @@ function ProjectsPage() {
                     </td>
                     <td className="px-5 py-4 text-sm">{dayjs(project.startDate).format("DD MMM YYYY")}</td>
                     <td className="px-5 py-4 text-sm">{dayjs(project.endDate).format("DD MMM YYYY")}</td>
-                    <td className="px-5 py-4 text-sm">{project.assignedUsers?.map((member) => member.name).join(", ")}</td>
+                    <td className="px-5 py-4 text-sm">
+                      {project.assignedUsers?.length ? project.assignedUsers.map((member) => member.name).join(", ") : "None"}
+                    </td>
                     <td className="px-5 py-4">
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button
                           className="btn-secondary px-3 py-2 text-xs"
                           onClick={() => navigate(`/projects/${project._id}`)}
@@ -123,6 +139,24 @@ function ProjectsPage() {
                           >
                             Update Status
                           </button>
+                        )}
+                        {user?.role === "Admin" && (
+                          <>
+                            <button
+                              className="btn-secondary px-3 py-2 text-xs"
+                              onClick={() => setEditProject(project)}
+                              type="button"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="btn-danger px-3 py-2 text-xs"
+                              onClick={() => handleDelete(project._id)}
+                              type="button"
+                            >
+                              Delete
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -141,6 +175,13 @@ function ProjectsPage() {
           projectId={statusUpdateId}
           currentStatus={filteredProjects.find((p) => p._id === statusUpdateId)?.status || "Pending"}
           onClose={() => setStatusUpdateId(null)}
+        />
+      )}
+
+      {editProject && (
+        <EditProjectModal
+          project={editProject}
+          onClose={() => setEditProject(null)}
         />
       )}
     </div>

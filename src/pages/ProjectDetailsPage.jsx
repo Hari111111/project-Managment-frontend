@@ -15,6 +15,7 @@ import {
   updateProjectStatus,
 } from "../features/projects/projectsSlice";
 import { fetchUsers } from "../features/users/usersSlice";
+import MultiUserSelect from "../components/common/MultiUserSelect";
 
 function ProjectDetailsPage() {
   const { projectId } = useParams();
@@ -65,8 +66,13 @@ function ProjectDetailsPage() {
 
   const handleStatusUpdate = async (event) => {
     event.preventDefault();
-    await dispatch(updateProjectStatus({ projectId, payload: { status, progressNotes } }));
-    dispatch(fetchProjectById(projectId));
+    const result = await dispatch(updateProjectStatus({ projectId, payload: { status, progressNotes } }));
+    if (!result.error) {
+      toast.success("Project status updated successfully");
+      dispatch(fetchProjectById(projectId));
+    } else {
+      toast.error(result.payload || "Failed to update project status");
+    }
   };
 
   const canUpdateStatus =
@@ -91,14 +97,22 @@ function ProjectDetailsPage() {
 
     const result = await dispatch(updateProject({ projectId, formData }));
     if (!result.error) {
+      toast.success("Project updated successfully");
       dispatch(fetchProjectById(projectId));
+    } else {
+      toast.error(result.payload || "Failed to update project");
     }
   };
 
   const handleDelete = async () => {
-    const result = await dispatch(deleteProject(projectId));
-    if (!result.error) {
-      navigate("/projects");
+    if (window.confirm("Are you sure you want to delete this project?")) {
+      const result = await dispatch(deleteProject(projectId));
+      if (!result.error) {
+        toast.success("Project deleted successfully");
+        navigate("/projects");
+      } else {
+        toast.error(result.payload || "Failed to delete project");
+      }
     }
   };
 
@@ -127,7 +141,7 @@ function ProjectDetailsPage() {
               Timeline: {dayjs(selectedProject.startDate).format("DD MMM YYYY")} to {dayjs(selectedProject.endDate).format("DD MMM YYYY")}
             </p>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Assigned: {selectedProject.assignedUsers?.map((member) => member.name).join(", ")}
+              Assigned: {selectedProject.assignedUsers?.length ? selectedProject.assignedUsers.map((member) => member.name).join(", ") : "None"}
             </p>
           </div>
         </div>
@@ -220,23 +234,16 @@ function ProjectDetailsPage() {
           </div>
           <div>
             <label className="label">Assigned Users</label>
-            <select
-              className="input min-h-40"
-              multiple
-              value={projectForm.assignedUsers}
-              onChange={(event) =>
+            <MultiUserSelect
+              users={users.filter((u) => u.role !== "Admin")}
+              selectedUsers={projectForm.assignedUsers}
+              onChange={(selectedIds) =>
                 setProjectForm({
                   ...projectForm,
-                  assignedUsers: Array.from(event.target.selectedOptions, (option) => option.value),
+                  assignedUsers: selectedIds,
                 })
               }
-            >
-              {users.filter(u => u.role !== "Admin").map((member) => (
-                <option key={member._id} value={member._id}>
-                  {member.name} ({member.role})
-                </option>
-              ))}
-            </select>
+            />
           </div>
           <div>
             <label className="label">Replace Attachments</label>

@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import PageHeader from "../components/common/PageHeader";
 import Loader from "../components/common/Loader";
 import { useAppDispatch, useAppSelector } from "../hooks/useAppHooks";
-import { createUser, deleteUser, fetchUsers, updateUser } from "../features/users/usersSlice";
+import { createUser, deleteUser, fetchUsers, updateUser, clearUserError } from "../features/users/usersSlice";
+import toast from "react-hot-toast";
 
 const initialForm = {
   name: "",
@@ -20,19 +21,27 @@ function UserManagementPage() {
   const { items, loading, actionLoading, error } = useAppSelector((state) => state.users);
 
   useEffect(() => {
+    dispatch(clearUserError());
     dispatch(fetchUsers());
+    return () => {
+      dispatch(clearUserError());
+    };
   }, [dispatch]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    let result;
     if (editingId) {
-      await dispatch(updateUser({ userId: editingId, payload: form }));
+      result = await dispatch(updateUser({ userId: editingId, payload: form }));
     } else {
-      await dispatch(createUser(form));
+      result = await dispatch(createUser(form));
     }
 
-    setForm(initialForm);
-    setEditingId("");
+    if (!result.error) {
+      setForm(initialForm);
+      setEditingId("");
+      toast.success(editingId ? "User updated successfully" : "User created successfully");
+    }
   };
 
   const handleEdit = (user) => {
@@ -44,6 +53,17 @@ function UserManagementPage() {
       role: user.role,
       isActive: user.isActive,
     });
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      const result = await dispatch(deleteUser(userId));
+      if (!result.error) {
+        toast.success("User deleted successfully");
+      } else {
+        toast.error(result.payload || "Failed to delete user");
+      }
+    }
   };
 
   if (loading) return <Loader />;
@@ -80,10 +100,11 @@ function UserManagementPage() {
           </div>
           <div>
             <label className="label">Role</label>
-            <select className="input" value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
-              <option value="Admin">Admin</option>
-              <option value="User">User</option>
-            </select>
+            <input
+              className="input bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+              value="User"
+              disabled
+            />
           </div>
           <div>
             <label className="label">Status</label>
@@ -97,9 +118,23 @@ function UserManagementPage() {
             </select>
           </div>
         </div>
-        <button className="btn-primary" disabled={actionLoading} type="submit">
-          {editingId ? "Update User" : "Create User"}
-        </button>
+        <div className="flex gap-3">
+          <button className="btn-primary" disabled={actionLoading} type="submit">
+            {editingId ? "Update User" : "Create User"}
+          </button>
+          {editingId && (
+            <button
+              className="btn-secondary"
+              type="button"
+              onClick={() => {
+                setForm(initialForm);
+                setEditingId("");
+              }}
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
       </form>
 
       <div className="panel overflow-hidden">
@@ -126,7 +161,7 @@ function UserManagementPage() {
                       <button className="btn-secondary" onClick={() => handleEdit(user)} type="button">
                         Edit
                       </button>
-                      <button className="btn-danger" onClick={() => dispatch(deleteUser(user._id))} type="button">
+                      <button className="btn-danger" onClick={() => handleDeleteUser(user._id)} type="button">
                         Delete
                       </button>
                     </div>

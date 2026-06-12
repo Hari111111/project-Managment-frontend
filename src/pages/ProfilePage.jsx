@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 import AvatarUpload from "../components/common/AvatarUpload";
 import PageHeader from "../components/common/PageHeader";
 import { useAppDispatch, useAppSelector } from "../hooks/useAppHooks";
-import { updateProfile } from "../features/users/usersSlice";
+import { updateProfile, clearUserError } from "../features/users/usersSlice";
 
 function ProfilePage() {
   const dispatch = useAppDispatch();
@@ -15,6 +16,13 @@ function ProfilePage() {
     mobile: user?.mobile || "",
   });
   const [selectedFile, setSelectedFile] = useState(null);
+
+  useEffect(() => {
+    dispatch(clearUserError());
+    return () => {
+      dispatch(clearUserError());
+    };
+  }, [dispatch]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -30,7 +38,12 @@ function ProfilePage() {
       formData.append("avatar", form.avatar);
     }
 
-    await dispatch(updateProfile(formData));
+    const result = await dispatch(updateProfile(formData));
+    if (!result.error) {
+      toast.success("Profile updated successfully");
+    } else {
+      toast.error(result.payload || "Failed to update profile");
+    }
   };
 
   return (

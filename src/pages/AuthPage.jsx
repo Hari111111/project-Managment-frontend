@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, ShieldCheck, Zap } from "lucide-react";
 
@@ -13,9 +13,28 @@ function AuthPage() {
   const [tab, setTab] = useState("login");
   const [loginForm, setLoginForm] = useState(initialLogin);
   const [setupForm, setSetupForm] = useState(initialSetup);
+  const [isSetupCompleted, setIsSetupCompleted] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    const checkSetupStatus = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"}/auth/setup-status`);
+        const data = await response.json();
+        if (data && data.success) {
+          setIsSetupCompleted(data.isSetupCompleted);
+          if (data.isSetupCompleted) {
+            setTab("login");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch setup status:", err);
+      }
+    };
+    checkSetupStatus();
+  }, []);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -86,13 +105,15 @@ function AuthPage() {
               >
                 Login
               </button>
-              <button
-                className={`rounded-xl px-6 py-2.5 text-sm font-semibold transition-all ${tab === "setup" ? "bg-white text-brand-700 shadow-sm dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
-                onClick={() => setTab("setup")}
-                type="button"
-              >
-                Setup Admin
-              </button>
+              {!isSetupCompleted && (
+                <button
+                  className={`rounded-xl px-6 py-2.5 text-sm font-semibold transition-all ${tab === "setup" ? "bg-white text-brand-700 shadow-sm dark:bg-slate-700 dark:text-white" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
+                  onClick={() => setTab("setup")}
+                  type="button"
+                >
+                  Setup Admin
+                </button>
+              )}
             </div>
 
             {error ? (

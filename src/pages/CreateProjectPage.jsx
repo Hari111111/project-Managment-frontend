@@ -6,6 +6,7 @@ import PageHeader from "../components/common/PageHeader";
 import { useAppDispatch, useAppSelector } from "../hooks/useAppHooks";
 import { createProject } from "../features/projects/projectsSlice";
 import { fetchUsers } from "../features/users/usersSlice";
+import MultiUserSelect from "../components/common/MultiUserSelect";
 
 const initialState = {
   title: "",
@@ -45,7 +46,12 @@ function CreateProjectPage() {
     });
 
     const result = await dispatch(createProject(formData));
-    if (!result.error) navigate("/projects");
+    if (!result.error) {
+      toast.success("Project created successfully");
+      navigate("/projects");
+    } else {
+      toast.error(result.payload || "Failed to create project");
+    }
   };
 
   return (
@@ -105,24 +111,16 @@ function CreateProjectPage() {
 
         <div>
           <label className="label">Assigned Users</label>
-          <select
-            className="input min-h-40"
-            multiple
-            value={form.assignedUsers}
-            onChange={(event) =>
+          <MultiUserSelect
+            users={users.filter((u) => u.role !== "Admin")}
+            selectedUsers={form.assignedUsers}
+            onChange={(selectedIds) =>
               setForm({
                 ...form,
-                assignedUsers: Array.from(event.target.selectedOptions, (option) => option.value),
+                assignedUsers: selectedIds,
               })
             }
-          >
-            {users.filter(u => u.role !== "Admin").map((user) => (
-              <option key={user._id} value={user._id}>
-                {user.name} ({user.role})
-              </option>
-            ))}
-          </select>
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Hold Ctrl or Cmd to select multiple users.</p>
+          />
         </div>
 
         <div>
